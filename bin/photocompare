@@ -200,9 +200,9 @@ STATISTICS = {
 def header(prefix, metrics, num, column1, columns):
     """Builds the header of a table."""
     items = [(prefix + " " * column1)[:column1]]
-    for i in range(num):
+    for m in metrics:
         items.append(" ")
-        for m in metrics:
+        for i in range(num):
             s = f"{m}[{i:d}]"
             items.append(" " * (columns - len(s)) + s)
     return " ".join(items)
@@ -210,13 +210,11 @@ def header(prefix, metrics, num, column1, columns):
 
 def line(prefix, metrics, values, column1, columns):
     """Builds a line of a table."""
-    num = len(values[next(iter(metrics))])
     items = [(prefix + " " * column1)[:column1]]
-    for i in range(num):
+    for m in metrics:
         items.append(" ")
-        for m in metrics:
-            val = values[m][i]
-            s = f"{val:.4f}"
+        for value in values[m]:
+            s = f"{value:.4f}"
             items.append(" " * (columns - len(s)) + s)
     return " ".join(items)
 

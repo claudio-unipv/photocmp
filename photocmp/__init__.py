@@ -17,6 +17,6 @@ def psnr(image1, image2):
     """Peak Signal to Noise Ratio (PSNR)."""
     mse_val = mse(image1, image2)
     if mse_val > 0:
-        return -10 * np.log(mse_val)
+        return -10 * np.log10(mse_val)
     else:
         return np.inf
