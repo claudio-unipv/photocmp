@@ -197,9 +197,9 @@ STATISTICS = {
 }
 
 
-def header(metrics, num, column1, columns):
+def header(prefix, metrics, num, column1, columns):
     """Builds the header of a table."""
-    items = [("REFERENCE" + " " * column1)[:column1]]
+    items = [(prefix + " " * column1)[:column1]]
     for i in range(num):
         items.append(" ")
         for m in metrics:
@@ -269,20 +269,20 @@ def main():
 
     # 2) Compare the images.
     detail = (sys.stdout if args.detail else NoOutput())
-    print(header(args.metric, len(sets) - 1, PATH_WIDTH, VALUE_WIDTH), file=detail)
+    print(header("REFERENCE", args.metric, len(sets) - 1, PATH_WIDTH, VALUE_WIDTH), file=detail)
     allmetrics = {m: [[] for _ in range(len(sets) - 1)] for m in args.metric}
     tuples = list(zip(*sets))
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor, \
          (open(args.write, "w") if args.write else NoOutput()) as outfile:
         for paths, metrics in zip(tuples, executor.map(lambda t: compare(t, args.metric), tuples)):
             append_metrics(allmetrics, metrics)
-            disp = display_str(paths[0], PATH_WIDTH)
+            disp = display_str(imagename(paths[0]), PATH_WIDTH)
             print(line(disp, args.metric, metrics, PATH_WIDTH, VALUE_WIDTH), file=detail)
             print(dump_line(paths, args.metric, metrics), file=outfile)
     print(file=detail)
 
     # 3) Print a summary of the results.
-    print(header(args.metric, len(sets) - 1, STAT_WIDTH, VALUE_WIDTH))
+    print(header("", args.metric, len(sets) - 1, STAT_WIDTH, VALUE_WIDTH))
     for stat in STATISTICS:
         stat_values = compute_stats(allmetrics, STATISTICS[stat])
         print(line(stat, args.metric, stat_values, STAT_WIDTH, VALUE_WIDTH))
