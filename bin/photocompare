@@ -46,6 +46,15 @@ def parse_args():
     a("--detail", "-d", action="store_true", help="show individual comparisons")
     a("--workers", "-t", type=int, help="number of parallel threads")
     a("--write", "-w", help="save the results in a file")
+
+    def size(s):
+        if s is None:
+            return None
+        w, x, h = s.lower().partition("x")
+        return ((int(w), int(h)) if x == "x" else (int(w), int(w)))
+            
+    a("--resize", "-r", type=size, help="resize images to the given dimension WxH " +
+      "(use a single dimension for square images)")
     args = parser.parse_args()
     return args
 
@@ -156,11 +165,12 @@ METRICS = {
 }
 
 
-def compare(paths, metrics):
+def compare(paths, metrics, resize):
     """Load the images and compute the metrics given by name."""
-    reference = load_image(paths[0])
-    sz = (reference.shape[1], reference.shape[0])
-    others = [load_image(p, sz) for p in paths[1:]]
+    reference = load_image(paths[0], resize)
+    if resize is None:
+        resize = (reference.shape[1], reference.shape[0])
+    others = [load_image(p, resize) for p in paths[1:]]
     return {
         mname: [
             METRICS[mname](reference, other) for other in others
@@ -270,9 +280,13 @@ def main():
     print(header("REFERENCE", args.metric, len(sets) - 1, PATH_WIDTH, VALUE_WIDTH), file=detail)
     allmetrics = {m: [[] for _ in range(len(sets) - 1)] for m in args.metric}
     tuples = list(zip(*sets))
+
+    def task(t):
+        return compare(t, args.metric, args.resize)
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=args.workers) as executor, \
          (open(args.write, "w") if args.write else NoOutput()) as outfile:
-        for paths, metrics in zip(tuples, executor.map(lambda t: compare(t, args.metric), tuples)):
+        for paths, metrics in zip(tuples, executor.map(task, tuples)):
             append_metrics(allmetrics, metrics)
             disp = display_str(imagename(paths[0]), PATH_WIDTH)
             print(line(disp, args.metric, metrics, PATH_WIDTH, VALUE_WIDTH), file=detail)
