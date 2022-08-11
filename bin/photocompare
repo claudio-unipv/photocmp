@@ -39,7 +39,7 @@ def parse_args():
     a = parser.add_argument
     a("reference", help="Reference set")
     a("other", nargs="+", help="Set of pictures to compare")
-    a("--metric", "-m", choices=list(METRICS), nargs="+", default=["mse", "psnr"],
+    a("--metric", "-m", choices=list(METRICS), nargs="+", default=["mse", "psnr", "ssim"],
       help="difference metric(s)")
     a("--sort", "-s", action="store_true", help="sort the sets in alphabetical order")
     a("--match-names", "-n", action="store_true", help="match images by filename")
@@ -161,7 +161,8 @@ def load_image(path, image_size=None):
 
 METRICS = {
     "mse": photocmp.mse,
-    "psnr": photocmp.psnr
+    "psnr": photocmp.psnr,
+    "ssim": photocmp.ssim
 }
 
 

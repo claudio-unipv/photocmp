@@ -24,7 +24,7 @@ Enter `photocompare -h` for additional help.
 ## Supported metrics
 - [X] MSE
 - [X] PSNR
-- [ ] SSIM
+- [X] SSIM
 - [ ] Delta E
 - [ ] LPIPS
 - [ ] Frechet?
