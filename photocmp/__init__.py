@@ -1,4 +1,10 @@
 import numpy as np
+import threading
+
+try:
+    import lpips as perceptual
+except ImportError:
+    perceptual = None
 
 
 def _guess_dynamic_range(image, default=-1):
@@ -97,6 +103,47 @@ def ssim(image1, image2, window=8, dynamic_range=None, dtype=np.float32):
     num = (2 * mu1 * mu2 + c1) * (2 * cov + c2)
     den = (mu1 ** 2 + mu2 ** 2 + c1) * (sigma1 + sigma2 + c2)
     return (num / den).mean(dtype=dtype)
+
+
+def _lpips_object(net, cache={}, lock=threading.Lock()):
+    """Return LPIPS objects using a cache to avoid copies."""
+    with lock:
+        if net not in cache:
+            if perceptual is None:
+                msg = "LPIPS disabled: install the module to use it (pip install lpips)."
+                raise RuntimeError(msg)
+            cache[net] = perceptual.LPIPS(net=net)
+        return cache[net]
+
+
+def lpips(image1, image2, dynamic_range=None, net="alex"):
+    """Learned Perceptual Image Patch Similarity (LPIPS).
+
+    Args:
+        image1 (array): first image
+        image2 (array): second image
+        dynamic_range (float): maximum value in the image
+        net (str): CNN architecture: "alex" (default), "vgg", or "squeeze"
+
+    Returns:
+        (float) the LPIPS between the two images.
+
+    Input images must have three channels (RGB). Their size must match
+    exactly.  If not given the dynamic range is 255 for eight-bit
+    images and 1 for floating point images (if all values are in the
+    [0, 1] range).
+
+    """
+    if dynamic_range is None:
+        dynamic_range = max(_guess_dynamic_range(image1),
+                            _guess_dynamic_range(image2))
+    # LPIPS requires images in the [-1, 1] range.
+    image1 = 2 * (image1 / dynamic_range) - 1
+    image2 = 2 * (image2 / dynamic_range) - 1
+    im1 = perceptual.np2tensor(image1)
+    im2 = perceptual.np2tensor(image2)
+    dist = _lpips_object(net)(im1, im2)
+    return dist.item()
 
 
 def _test():
