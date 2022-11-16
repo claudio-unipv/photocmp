@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name='photocmp',
-    version='0.1',
+    version='0.3.1',
     description='Tool and library to compare sets of images',
     author='Claudio Cusano',
     author_email='claudio.cusano@unipv.it',

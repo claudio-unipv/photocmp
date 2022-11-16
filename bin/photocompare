@@ -34,12 +34,24 @@ def parse_args():
 
     Images are compared by following the order in the sets, unless the
     --math-names options is given.
+
+
+    METRICS
+    Available metrics are:
+    - mse: Mean Squared Error
+    - psnr: Peak Signal to Noise Ratio
+    - ssim: Structural Similarity Index
+    - lpips: Learned Perceptual Image Patch Similarity
+    - lpips_vgg: as lpips but with VGG instead of AlexNet
+    - lpips_squeeze: as lpips but with SqueezeNet instead of AlexNet
+
+    The LPIPS metric requires that the "lpips" module is installed (pip install lpips).
     """
     parser = argparse.ArgumentParser(description="Compare sets of pictures.", epilog=epilog)
     a = parser.add_argument
     a("reference", help="Reference set")
     a("other", nargs="+", help="Set of pictures to compare")
-    a("--metric", "-m", choices=list(METRICS), nargs="+", default=["mse", "psnr"],
+    a("--metric", "-m", choices=list(METRICS), nargs="+", default=["mse", "psnr", "ssim"],
       help="difference metric(s)")
     a("--sort", "-s", action="store_true", help="sort the sets in alphabetical order")
     a("--match-names", "-n", action="store_true", help="match images by filename")
@@ -161,7 +173,11 @@ def load_image(path, image_size=None):
 
 METRICS = {
     "mse": photocmp.mse,
-    "psnr": photocmp.psnr
+    "psnr": photocmp.psnr,
+    "ssim": photocmp.ssim,
+    "lpips": photocmp.lpips,
+    "lpips_vgg": (lambda x, y: photocmp.lpips(x, y, net="vgg")),
+    "lpips_squeeze": (lambda x, y: photocmp.lpips(x, y, net="squeeze"))
 }
 
 
